@@ -934,6 +934,13 @@ pub struct IndexContext {
     pub qps: &'static str,
     pub has_inductor_provenance: bool,
     pub directory_names: Vec<String>,
+    pub graph_break_summary: Vec<GraphBreakSummaryContext>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GraphBreakSummaryContext {
+    pub reason_html: String,
+    pub occurrences: usize,
 }
 
 #[derive(Debug, Serialize)]

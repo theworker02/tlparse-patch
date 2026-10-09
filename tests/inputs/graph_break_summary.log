@@ -1,0 +1,3 @@
+V0101 00:00:00.000000 1 torch/_dynamo/utils.py:1] {"compilation_metrics":{"restart_reasons":["beta graph break","alpha graph break"]},"frame_id":0,"frame_compile_id":0,"attempt":1}
+V0101 00:00:01.000000 1 torch/_dynamo/utils.py:1] {"compilation_metrics":{"restart_reasons":["beta graph break"]},"frame_id":1,"frame_compile_id":0,"attempt":1}
+V0101 00:00:02.000000 1 torch/_dynamo/utils.py:1] {"compilation_metrics":{"restart_reasons":["alpha graph break"]},"frame_id":2,"frame_compile_id":0,"attempt":1}

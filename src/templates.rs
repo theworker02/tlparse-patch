@@ -135,6 +135,19 @@ Various issues may cause Dynamo to restart its analysis or give up on compilatio
 This run had <strong><a href="failures_and_restarts.html">{num_breaks} restart(s) and/or compilation failure(s)</a></strong>.
 </p>
 {{ endif }}
+{{ if graph_break_summary }}
+<h2>Distinct Graph Breaks</h2>
+<p>
+The summary groups restart reasons across all compilations. It is ordered by occurrence count,
+then alphabetically for ties.
+</p>
+<table>
+<tr><th>Occurrences</th><th>Graph break reason</th></tr>
+{{ for graph_break in graph_break_summary }}
+<tr><td>{graph_break.occurrences}</td><td><code>{graph_break.reason_html | format_unescaped}</code></td></tr>
+{{ endfor }}
+</table>
+{{ endif }}
 <h2>IR dumps</h2>
 <p>
 The <strong>IR dumps</strong> collected dumped intermediate products from various points of the PT2
