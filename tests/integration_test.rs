@@ -288,6 +288,24 @@ fn test_parse_compilation_metrics() {
 }
 
 #[test]
+fn test_graph_break_summary_groups_reasons_and_counts_occurrences() {
+    let path = Path::new("tests/inputs/graph_break_summary.log").to_path_buf();
+    let output = tlparse::parse_path(&path, &ParseConfig::default()).unwrap();
+    let map: HashMap<PathBuf, String> = output.into_iter().collect();
+    let index = &map[&PathBuf::from("index.html")];
+
+    assert!(index.contains("<h2>Distinct Graph Breaks</h2>"));
+    assert!(index.contains("<td>2</td><td><code>alpha graph break</code></td>"));
+    assert!(index.contains("<td>2</td><td><code>beta graph break</code></td>"));
+    assert_eq!(index.matches("alpha graph break</code>").count(), 1);
+    assert_eq!(index.matches("beta graph break</code>").count(), 1);
+    assert!(
+        index.find("alpha graph break").unwrap() < index.find("beta graph break").unwrap(),
+        "equally frequent graph breaks should be ordered alphabetically"
+    );
+}
+
+#[test]
 fn test_parse_compilation_failures() {
     let expected_files = [
         "-_0_0_0/dynamo_output_graph",

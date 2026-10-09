@@ -9,6 +9,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use regex::Regex;
 use serde_json::Value;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{self, BufRead, Read};
@@ -653,6 +654,11 @@ pub fn parse_path(path: &PathBuf, config: &ParseConfig) -> anyhow::Result<ParseO
         qps: TEMPLATE_QUERY_PARAM_SCRIPT,
     };
 
+    // A BTreeMap gives stable iteration while collecting graph-break reasons.  The
+    // final summary is additionally sorted by frequency so the most actionable
+    // reasons appear first.
+    let mut graph_break_counts: BTreeMap<String, usize> = BTreeMap::new();
+
     let mut export_failures: Vec<ExportFailure> = Vec::new();
 
     // NB: Sometimes, the log output we get from Logarithm stutters with a blank line.
@@ -966,6 +972,7 @@ pub fn parse_path(path: &PathBuf, config: &ParseConfig) -> anyhow::Result<ParseO
                         id.clone(),
                         format!("{}", FailureReason::Restart(restart.clone())),
                     ));
+                    *graph_break_counts.entry(restart.clone()).or_default() += 1;
                 }
             }
             if let Some(f) = m.fail_type.as_ref() {
@@ -1299,6 +1306,17 @@ pub fn parse_path(path: &PathBuf, config: &ParseConfig) -> anyhow::Result<ParseO
         serde_json::to_string_pretty(&directory_to_json(&directory))?,
     ));
 
+    let mut graph_break_summary: Vec<(String, usize)> = graph_break_counts.into_iter().collect();
+    graph_break_summary
+        .sort_by(|left, right| right.1.cmp(&left.1).then_with(|| left.0.cmp(&right.0)));
+    let graph_break_summary: Vec<GraphBreakSummaryContext> = graph_break_summary
+        .into_iter()
+        .map(|(reason, occurrences)| GraphBreakSummaryContext {
+            reason_html: encode_text(&reason).into_owned(),
+            occurrences,
+        })
+        .collect();
+
     // Generate traditional tlparse index
     let index_context = IndexContext {
         css: CSS,
@@ -1320,6 +1338,7 @@ pub fn parse_path(path: &PathBuf, config: &ParseConfig) -> anyhow::Result<ParseO
         qps: TEMPLATE_QUERY_PARAM_SCRIPT,
         has_inductor_provenance: config.inductor_provenance,
         directory_names: directory_names.clone(),
+        graph_break_summary,
     };
     let tlparse_index_html = tt.render("index.html", &index_context)?;
 
